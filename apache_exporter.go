@@ -10,14 +10,15 @@ import (
 	"strings"
 	"sync"
 
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 const (
@@ -44,6 +45,8 @@ type Exporter struct {
 	kBytesTotal    *prometheus.Desc
 	durationTotal  *prometheus.Desc
 	cpuload        prometheus.Gauge
+	busyWorkers    prometheus.Gauge
+	idleWorkers    prometheus.Gauge
 	uptime         *prometheus.Desc
 	workers        *prometheus.GaugeVec
 	scoreboard     *prometheus.GaugeVec
@@ -84,6 +87,16 @@ func NewExporter(uri string) *Exporter {
 			Namespace: namespace,
 			Name:      "cpuload",
 			Help:      "The current percentage CPU used by each worker and in total by all workers combined (*)",
+		}),
+		busyWorkers: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "busyworkers",
+			Help:      "The current number of busy workers",
+		}),
+		idleWorkers: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "idleworkers",
+			Help:      "The current number of idle workers",
 		}),
 		uptime: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "uptime_seconds_total"),
@@ -132,6 +145,8 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.durationTotal
 	ch <- e.apacheVersion
 	e.cpuload.Describe(ch)
+	e.busyWorkers.Describe(ch)
+	e.idleWorkers.Describe(ch)
 	e.scrapeFailures.Describe(ch)
 	e.workers.Describe(ch)
 	e.scoreboard.Describe(ch)
@@ -274,14 +289,17 @@ func (e *Exporter) collect(ch chan<- prometheus.Metric) error {
 				return err
 			}
 
+			log.Debug("Total Busy Workers: ", val)
 			e.workers.WithLabelValues("busy").Set(val)
+			e.busyWorkers.Set(val)
 		case key == "IdleWorkers":
 			val, err := strconv.ParseFloat(v, 64)
 			if err != nil {
 				return err
 			}
-
+			log.Debug("Total Idle Workers:", val)
 			e.workers.WithLabelValues("idle").Set(val)
+			e.idleWorkers.Set(val)
 		case key == "Scoreboard":
 			e.updateScoreboard(v)
 			e.scoreboard.Collect(ch)
@@ -320,6 +338,8 @@ func (e *Exporter) collect(ch chan<- prometheus.Metric) error {
 	}
 
 	e.cpuload.Collect(ch)
+	e.busyWorkers.Collect(ch)
+	e.idleWorkers.Collect(ch)
 	e.workers.Collect(ch)
 	if connectionInfo {
 		e.connections.Collect(ch)

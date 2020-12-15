@@ -1,10 +1,7 @@
 
 # Apache Exporter for Prometheus [![Build Status][buildstatus]][circleci]
 
-[![GitHub release](https://img.shields.io/github/release/Lusitaniae/apache_exporter.svg)][release]
-![GitHub Downloads](https://img.shields.io/github/downloads/Lusitaniae/apache_exporter/total.svg)
-[![Docker Repository on Quay](https://quay.io/repository/Lusitaniae/apache-exporter/status)][quay]
-[![Docker Pulls](https://img.shields.io/docker/pulls/lusotycoon/apache-exporter.svg?maxAge=604800)][hub]
+Originally cloned from https://github.com/Lusitaniae/apache_exporter
 
 Exports apache mod_status statistics via HTTP for Prometheus consumption.
 
@@ -54,7 +51,7 @@ Another option is to use a docker go container to generate the binary.
 
 Pick an appropriate go image from https://hub.docker.com/_/golang. Inside the project directory run:
 ```
-docker run --rm -v <project home>:/usr/local/go/src/github.com/Lusitaniae/apache_exporter -w /usr/local/go/src/github.com/Lusitaniae/apache_exporter <go docker image name> make
+docker run --rm -v <project home>:/usr/local/go/src/apache_prometheus_exporter -w /usr/local/go/src/apache_eprometheus_xporter <go docker image name> make
 ```
 
 ## Build image
@@ -62,7 +59,7 @@ docker run --rm -v <project home>:/usr/local/go/src/github.com/Lusitaniae/apache
 Run the following commands from the project root directory.
 
 ```
-docker build -t apache_exporter .
+docker build -t msts/apache_prometheus_exporter .
 ```
 
 ## Run
@@ -151,10 +148,4 @@ A. Make sure that you add `?auto` at the end of the scrape_uri.
 ## Author
 
 The exporter was originally created by [neezgee](https://github.com/neezgee).
-
-
-[buildstatus]: https://circleci.com/gh/Lusitaniae/apache_exporter/tree/master.svg?style=shield
-[quay]: https://quay.io/repository/Lusitaniae/apache-exporter
-[circleci]: https://circleci.com/gh/Lusitaniae/apache_exporter
-[hub]: https://hub.docker.com/r/lusotycoon/apache-exporter/
-[release]: https://github.com/Lusitaniae/apache_exporter/releases/latest
+MSTS Cloned from [lusitaniae](https://github.com/Lusitaniae/)
